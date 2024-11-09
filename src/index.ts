@@ -31,8 +31,11 @@ const client: ExtendedClient = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.GuildMembers,
     ],
 }) as ExtendedClient;
+
 
 client.commands = new Collection();
 
@@ -44,6 +47,14 @@ client.once('ready', async () => {
 
     // Registrar Slash Commands
     await loadSlashCommands(client, clientId, guildId, token);
+});
+
+client.on('messageCreate', async (message) => {
+  // Verifica se a mensagem é uma DM e se não foi enviada pelo bot
+  console.info(message.content)
+  if (message.channel.type === 1 && !message.author.bot) {
+    await message.reply('Ainda não processo DMs, por favor, utilize os comandos em um servidor.');
+  }
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -63,4 +74,3 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 client.login(token);
-//TODO: transformar todas as tasks em slashcommand

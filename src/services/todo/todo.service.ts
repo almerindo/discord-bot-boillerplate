@@ -91,19 +91,28 @@ export class TodoService {
 
     // Método para obter todas as tarefas, agrupadas por usuário
     async getTodosGroupedByUser(): Promise<any> {
-        return await TodoModel.aggregate([
-            {
-                $group: {
-                    _id: { userId: '$userId', username: '$username' },
-                    tasks: {
-                        $push: {
-                            code: '$code',
-                            description: '$description',
-                            status: '$status',
-                        },
-                    },
-                },
-            },
-        ]);
-    }
-}
+      return await TodoModel.aggregate([
+          {
+              $group: {
+                  _id: '$userId',
+                  username: { $first: '$username' }, // Captura o primeiro username associado ao userId
+                  tasks: {
+                      $push: {
+                          code: '$code',
+                          description: '$description',
+                          status: '$status',
+                      },
+                  },
+              },
+          },
+          {
+              $project: {
+                  _id: 0,
+                  userId: '$_id',
+                  username: 1,
+                  tasks: 1,
+              },
+          },
+      ]);
+  }
+  }
