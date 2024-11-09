@@ -8,14 +8,23 @@ export class TodoService {
     code: string,
     description: string,
   ): Promise<ITodo> {
-    const todo = new TodoModel({
-      userId: `<@${userId}>`,
-      username,
-      code,
-      description,
-      status: ETodoStatus.TODO,
-    });
-    return await todo.save();
+    try {
+      const todo = new TodoModel({
+        userId: `<@${userId}>`,
+        username,
+        code,
+        description,
+        status: ETodoStatus.TODO,
+      });
+      return await todo.save();
+    } catch (error: any) {
+      if (error.code === 11000) {
+        throw new Error(
+          `Já existe uma tarefa com o código "${code}" para este usuário. Por favor, escolha outro código.`,
+        );
+      }
+      throw error;
+    }
   }
 
   async getTodos(userId: string): Promise<ITodo[]> {
