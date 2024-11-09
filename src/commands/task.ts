@@ -380,7 +380,8 @@ export const command: IBotSlashCommand = {
               { name: 'doing', value: ETodoStatus.DOING },
               { name: 'done', value: ETodoStatus.DONE },
             ),
-        ).addUserOption(option =>
+        )
+        .addUserOption(option =>
           option
             .setName('user')
             .setDescription('Usuário da tarefa')
@@ -388,8 +389,6 @@ export const command: IBotSlashCommand = {
         ),
     )
     .addSubcommand(subcommand =>
-      subcommand
-        .setName('list')
-        .setDescription('Lista todas as tarefas')
+      subcommand.setName('list').setDescription('Lista todas as tarefas'),
     ),
 };

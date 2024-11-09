@@ -1,12 +1,17 @@
-import { CacheType, CommandInteraction, Message, SlashCommandBuilder } from 'discord.js';
+import {
+  CacheType,
+  CommandInteraction,
+  Message,
+  SlashCommandBuilder,
+} from 'discord.js';
 
 export interface IBotCommand {
-    group: string;
-    name: string;
-    description: string;
-    allowedBy?: Set<string>;
-    usage: string;
-    execute: (message: Message, args: string[]) => Promise<any>;
+  group: string;
+  name: string;
+  description: string;
+  allowedBy?: Set<string>;
+  usage: string;
+  execute: (message: Message, args: string[]) => Promise<any>;
 }
 
 export interface IBotSlashCommand {
@@ -19,4 +24,3 @@ export interface IBotSlashCommand {
 
   slashCommand: any;
 }
-
