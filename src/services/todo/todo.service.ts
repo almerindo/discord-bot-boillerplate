@@ -1,4 +1,3 @@
-// ./src/services/todo/todo.service.ts
 import { TodoModel, ITodo, ETodoStatus } from './models/todo.model';
 
 export class TodoService {
@@ -71,13 +70,25 @@ export class TodoService {
         $group: {
           _id: { username: '$username', status: '$status' },
           count: { $sum: 1 },
+          tasks: {
+            $push: {
+              code: '$code',
+              description: '$description',
+              createdAt: '$createdAt',
+              finishedAt: '$finishedAt',
+            },
+          },
         },
       },
       {
         $group: {
           _id: '$_id.username',
           statusCounts: {
-            $push: { status: '$_id.status', count: '$count' },
+            $push: {
+              status: '$_id.status',
+              count: '$count',
+              tasks: '$tasks',
+            },
           },
         },
       },
@@ -98,18 +109,20 @@ export class TodoService {
     );
   }
 
-  // Método para obter todas as tarefas, agrupadas por usuário
+  // Method to retrieve all tasks, grouped by user
   async getTodosGroupedByUser(): Promise<any> {
     return await TodoModel.aggregate([
       {
         $group: {
           _id: '$userId',
-          username: { $first: '$username' }, // Captura o primeiro username associado ao userId
+          username: { $first: '$username' },
           tasks: {
             $push: {
               code: '$code',
               description: '$description',
               status: '$status',
+              createdAt: '$createdAt',
+              finishedAt: '$finishedAt',
             },
           },
         },

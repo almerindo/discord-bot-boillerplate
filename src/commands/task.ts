@@ -313,6 +313,24 @@ async function handleDeleteAll(
   }
 }
 
+// Helper function to split messages
+function splitMessage(message: string, maxLength = 2000): string[] {
+  const chunks = [];
+  let currentChunk = '';
+
+  message.split('\n').forEach(line => {
+    if ((currentChunk + line).length > maxLength) {
+      chunks.push(currentChunk);
+      currentChunk = '';
+    }
+    currentChunk += line + '\n';
+  });
+
+  if (currentChunk) chunks.push(currentChunk);
+
+  return chunks;
+}
+
 async function handleStats(interaction: CommandInteraction, userId: string) {
   try {
     let statistics;
@@ -328,14 +346,41 @@ async function handleStats(interaction: CommandInteraction, userId: string) {
       return sendEphemeralResponse(interaction, 'Não há tarefas registradas.');
     }
 
-    let response = 'Estatísticas das tarefas:\n';
-    for (const stat of statistics) {
-      response += `Usuário: ${stat._id}\n`;
-      for (const status of stat.statusCounts) {
-        response += `  ${status.status}: ${status.count}\n`;
+    let response = '📊 **Estatísticas das Tarefas** 📊\n';
+
+    // Loop through each user's statistics and their tasks grouped by status
+    for (const userStats of statistics) {
+      response += `\n👤 **Usuário**: ${userStats._id}\n`;
+      for (const statusCount of userStats.statusCounts) {
+        const { status, count, tasks } = statusCount;
+
+        response += `\n**Status**: ${status} - **Quantidade**: ${count}\n`;
+
+        for (const task of tasks) {
+          const createdAt = new Date(task.createdAt);
+          let elapsedDays;
+
+          if (status === 'done' && task.finishedAt) {
+            const finishedAt = new Date(task.finishedAt);
+            elapsedDays = Math.floor((finishedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+          } else {
+            elapsedDays = Math.floor((new Date().getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+          }
+
+          response += ` - **Código**: ${task.code} | **Dias**: ${elapsedDays} | **Descrição**: ${task.description}\n`;
+        }
       }
     }
-    await sendEphemeralResponse(interaction, response);
+
+    // Check for Discord's message limit, splitting if necessary
+    if (response.length > 2000) {
+      const chunks = splitMessage(response);
+      for (const chunk of chunks) {
+        await sendEphemeralResponse(interaction, chunk);
+      }
+    } else {
+      await sendEphemeralResponse(interaction, response);
+    }
   } catch (error: any) {
     await sendEphemeralResponse(interaction, error.message);
   }
