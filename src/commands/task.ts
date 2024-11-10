@@ -14,7 +14,8 @@ import { hasPermission } from '../bot/permissions';
 const todoService = new TodoService();
 const group = 'todo';
 const name = 'task';
-const description = 'Gerencia suas tarefas com várias operações como adicionar, visualizar, atualizar e deletar.';
+const description =
+  'Gerencia suas tarefas com várias operações como adicionar, visualizar, atualizar e deletar.';
 
 const sendEphemeralResponse = async (
   interaction: CommandInteraction,
@@ -37,7 +38,9 @@ export const command: IBotSlashCommand = {
   async execute(interaction: CommandInteraction<CacheType>) {
     await interaction.deferReply({ ephemeral: true });
 
-    const subcommand = (interaction.options as CommandInteractionOptionResolver).getSubcommand();
+    const subcommand = (
+      interaction.options as CommandInteractionOptionResolver
+    ).getSubcommand();
     const userId = interaction.user.id;
     const username = interaction.user.username;
 
@@ -72,7 +75,10 @@ export const command: IBotSlashCommand = {
       }
     } catch (error) {
       console.error(`Erro ao executar o comando ${name}:`, error);
-      await sendEphemeralResponse(interaction, 'Ocorreu um erro ao executar o comando.');
+      await sendEphemeralResponse(
+        interaction,
+        'Ocorreu um erro ao executar o comando.',
+      );
     }
   },
 
@@ -191,7 +197,8 @@ async function handleAdd(
   username: string,
 ) {
   const code = interaction.options.get('code', true).value as string;
-  const description = interaction.options.get('description', true).value as string;
+  const description = interaction.options.get('description', true)
+    .value as string;
   const targetUserId = interaction.options.get('user')?.value as string;
 
   if (targetUserId && !hasPermission(interaction, ['staff', 'bug-catcher'])) {
@@ -200,7 +207,8 @@ async function handleAdd(
 
   const targetUser = targetUserId || userId;
   const targetUsername = targetUserId
-    ? (await interaction.guild?.members.fetch(targetUserId))?.user.username || 'Usuário Desconhecido'
+    ? (await interaction.guild?.members.fetch(targetUserId))?.user.username ||
+      'Usuário Desconhecido'
     : username;
 
   try {
@@ -216,7 +224,9 @@ async function handleAdd(
     );
 
     if (targetUserId && targetUserId !== userId) {
-      const targetUserMember = await interaction.guild?.members.fetch(targetUserId);
+      const targetUserMember = await interaction.guild?.members.fetch(
+        targetUserId,
+      );
       if (targetUserMember) {
         await targetUserMember.user
           .send(
@@ -255,7 +265,8 @@ async function handleTextUpdate(
 ) {
   try {
     const code = interaction.options.get('code', true).value as string;
-    const newDescription = interaction.options.get('description', true).value as string;
+    const newDescription = interaction.options.get('description', true)
+      .value as string;
     const updatedTodo = await todoService.updateTodoText(
       userId,
       code,
@@ -287,7 +298,10 @@ async function handleDelete(interaction: CommandInteraction, userId: string) {
   }
 }
 
-async function handleDeleteAll(interaction: CommandInteraction, userId: string) {
+async function handleDeleteAll(
+  interaction: CommandInteraction,
+  userId: string,
+) {
   try {
     await todoService.deleteAllTodos(userId);
     await sendEphemeralResponse(
@@ -333,8 +347,10 @@ async function handleStatusUpdate(
 ) {
   try {
     const code = interaction.options.get('code', true).value as string;
-    const newStatus = interaction.options.get('status', true).value as ETodoStatus;
-    const statusTargetUserId = interaction.options.get('user', false)?.value as string;
+    const newStatus = interaction.options.get('status', true)
+      .value as ETodoStatus;
+    const statusTargetUserId = interaction.options.get('user', false)
+      ?.value as string;
 
     if (
       statusTargetUserId &&
@@ -343,9 +359,10 @@ async function handleStatusUpdate(
       return sendEphemeralResponse(interaction, randomMessage());
     }
 
-    const statusTargetUser = statusTargetUserId && hasPermission(interaction, ['staff', 'bug-catcher'])
-      ? statusTargetUserId
-      : userId;
+    const statusTargetUser =
+      statusTargetUserId && hasPermission(interaction, ['staff', 'bug-catcher'])
+        ? statusTargetUserId
+        : userId;
 
     if (!Object.values(ETodoStatus).includes(newStatus)) {
       return sendEphemeralResponse(
@@ -372,7 +389,10 @@ async function handleStatusUpdate(
 
 async function handleList(interaction: CommandInteraction) {
   try {
-    const isStaffOrBugCatcher = hasPermission(interaction, ['staff', 'bug-catcher']);
+    const isStaffOrBugCatcher = hasPermission(interaction, [
+      'staff',
+      'bug-catcher',
+    ]);
     const tasks = isStaffOrBugCatcher
       ? await todoService.getTodosGroupedByUser()
       : await todoService.getTodos(interaction.user.id);
