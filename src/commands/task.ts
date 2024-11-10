@@ -9,18 +9,18 @@ import { IBotSlashCommand } from '../bot/botcommand.interface';
 import { TodoService } from '../services/todo/todo.service';
 import { randomMessage } from '../bot/messages';
 import { ETodoStatus } from '../services/todo/models/todo.model';
+import { hasPermission } from '../bot/permissions';
 
 const todoService = new TodoService();
 const group = 'todo';
 const name = 'task';
 const description = 'Gerencia suas tarefas com várias operações como adicionar, visualizar, atualizar e deletar.';
 
-const hasPermission = (interaction: CommandInteraction, roles: string[]) => {
-  const memberRoles = interaction.member?.roles;
-  return memberRoles && 'cache' in memberRoles && roles.some(role => memberRoles.cache.some(r => r.name === role));
-};
-
-const sendEphemeralResponse = async (interaction: CommandInteraction, content: string, ephemeral = true) => {
+const sendEphemeralResponse = async (
+  interaction: CommandInteraction,
+  content: string,
+  ephemeral = true,
+) => {
   await interaction.followUp({ content, ephemeral });
 };
 
@@ -84,13 +84,22 @@ export const command: IBotSlashCommand = {
         .setName('add')
         .setDescription('Adiciona uma nova tarefa')
         .addStringOption(option =>
-          option.setName('code').setDescription('Código único para a tarefa').setRequired(true),
+          option
+            .setName('code')
+            .setDescription('Código único para a tarefa')
+            .setRequired(true),
         )
         .addStringOption(option =>
-          option.setName('description').setDescription('Descrição da tarefa').setRequired(true),
+          option
+            .setName('description')
+            .setDescription('Descrição da tarefa')
+            .setRequired(true),
         )
         .addUserOption(option =>
-          option.setName('user').setDescription('Usuário para quem a tarefa será adicionada').setRequired(false),
+          option
+            .setName('user')
+            .setDescription('Usuário para quem a tarefa será adicionada')
+            .setRequired(false),
         ),
     )
     .addSubcommand(subcommand =>
@@ -98,7 +107,10 @@ export const command: IBotSlashCommand = {
         .setName('get')
         .setDescription('Exibe os detalhes de uma tarefa')
         .addStringOption(option =>
-          option.setName('code').setDescription('Código da tarefa').setRequired(true),
+          option
+            .setName('code')
+            .setDescription('Código da tarefa')
+            .setRequired(true),
         ),
     )
     .addSubcommand(subcommand =>
@@ -106,10 +118,16 @@ export const command: IBotSlashCommand = {
         .setName('text-update')
         .setDescription('Atualiza a descrição de uma tarefa')
         .addStringOption(option =>
-          option.setName('code').setDescription('Código da tarefa').setRequired(true),
+          option
+            .setName('code')
+            .setDescription('Código da tarefa')
+            .setRequired(true),
         )
         .addStringOption(option =>
-          option.setName('description').setDescription('Nova descrição para a tarefa').setRequired(true),
+          option
+            .setName('description')
+            .setDescription('Nova descrição para a tarefa')
+            .setRequired(true),
         ),
     )
     .addSubcommand(subcommand =>
@@ -117,21 +135,31 @@ export const command: IBotSlashCommand = {
         .setName('delete')
         .setDescription('Deleta uma tarefa específica')
         .addStringOption(option =>
-          option.setName('code').setDescription('Código da tarefa').setRequired(true),
+          option
+            .setName('code')
+            .setDescription('Código da tarefa')
+            .setRequired(true),
         ),
     )
     .addSubcommand(subcommand =>
-      subcommand.setName('delete-all').setDescription('Deleta todas as tarefas do usuário'),
+      subcommand
+        .setName('delete-all')
+        .setDescription('Deleta todas as tarefas do usuário'),
     )
     .addSubcommand(subcommand =>
-      subcommand.setName('stats').setDescription('Mostra estatísticas das tarefas por status'),
+      subcommand
+        .setName('stats')
+        .setDescription('Mostra estatísticas das tarefas por status'),
     )
     .addSubcommand(subcommand =>
       subcommand
         .setName('status')
         .setDescription('Atualiza o status de uma tarefa')
         .addStringOption(option =>
-          option.setName('code').setDescription('Código da tarefa').setRequired(true),
+          option
+            .setName('code')
+            .setDescription('Código da tarefa')
+            .setRequired(true),
         )
         .addStringOption(option =>
           option
@@ -145,7 +173,10 @@ export const command: IBotSlashCommand = {
             ),
         )
         .addUserOption(option =>
-          option.setName('user').setDescription('Usuário da tarefa').setRequired(false),
+          option
+            .setName('user')
+            .setDescription('Usuário da tarefa')
+            .setRequired(false),
         ),
     )
     .addSubcommand(subcommand =>
@@ -154,7 +185,11 @@ export const command: IBotSlashCommand = {
 };
 
 // Handlers for each command subcommand
-async function handleAdd(interaction: CommandInteraction, userId: string, username: string) {
+async function handleAdd(
+  interaction: CommandInteraction,
+  userId: string,
+  username: string,
+) {
   const code = interaction.options.get('code', true).value as string;
   const description = interaction.options.get('description', true).value as string;
   const targetUserId = interaction.options.get('user')?.value as string;
@@ -175,15 +210,22 @@ async function handleAdd(interaction: CommandInteraction, userId: string, userna
       code,
       description,
     );
-    await sendEphemeralResponse(interaction, `Tarefa adicionada com sucesso para ${targetUsername}! Código: ${todo.code}, Descrição: ${todo.description}`);
+    await sendEphemeralResponse(
+      interaction,
+      `Tarefa adicionada com sucesso para ${targetUsername}! Código: ${todo.code}, Descrição: ${todo.description}`,
+    );
 
     if (targetUserId && targetUserId !== userId) {
       const targetUserMember = await interaction.guild?.members.fetch(targetUserId);
       if (targetUserMember) {
         await targetUserMember.user
-          .send(`Olá ${targetUserMember.user.username}, uma nova tarefa foi adicionada para você por ${interaction.user.username}: ` +
-                `\n**Código**: ${todo.code}\n**Descrição**: ${todo.description}`)
-          .catch(error => console.error('Erro ao enviar mensagem privada:', error));
+          .send(
+            `Olá ${targetUserMember.user.username}, uma nova tarefa foi adicionada para você por ${interaction.user.username}: ` +
+              `\n**Código**: ${todo.code}\n**Descrição**: ${todo.description}`,
+          )
+          .catch(error =>
+            console.error('Erro ao enviar mensagem privada:', error),
+          );
       }
     }
   } catch (error: any) {
@@ -191,94 +233,170 @@ async function handleAdd(interaction: CommandInteraction, userId: string, userna
   }
 }
 
+// Additional handlers with error handling in `try-catch`
 async function handleGet(interaction: CommandInteraction, userId: string) {
-  const code = interaction.options.get('code', true).value as string;
-  const task = await todoService.getTodoByCode(userId, code);
-  await sendEphemeralResponse(interaction, task ? `Tarefa: ${task.description} - Status: ${task.status}` : 'Tarefa não encontrada.');
+  try {
+    const code = interaction.options.get('code', true).value as string;
+    const task = await todoService.getTodoByCode(userId, code);
+    await sendEphemeralResponse(
+      interaction,
+      task
+        ? `Tarefa: ${task.description} - Status: ${task.status}`
+        : 'Tarefa não encontrada.',
+    );
+  } catch (error: any) {
+    await sendEphemeralResponse(interaction, error.message);
+  }
 }
 
-async function handleTextUpdate(interaction: CommandInteraction, userId: string) {
-  const code = interaction.options.get('code', true).value as string;
-  const newDescription = interaction.options.get('description', true).value as string;
-  const updatedTodo = await todoService.updateTodoText(userId, code, newDescription);
-  await sendEphemeralResponse(interaction, updatedTodo ? `Descrição da tarefa atualizada com sucesso! Nova descrição: ${updatedTodo.description}` : 'Tarefa não encontrada ou você não tem permissão para atualizá-la.');
+async function handleTextUpdate(
+  interaction: CommandInteraction,
+  userId: string,
+) {
+  try {
+    const code = interaction.options.get('code', true).value as string;
+    const newDescription = interaction.options.get('description', true).value as string;
+    const updatedTodo = await todoService.updateTodoText(
+      userId,
+      code,
+      newDescription,
+    );
+    await sendEphemeralResponse(
+      interaction,
+      updatedTodo
+        ? `Descrição da tarefa atualizada com sucesso! Nova descrição: ${updatedTodo.description}`
+        : 'Tarefa não encontrada ou você não tem permissão para atualizá-la.',
+    );
+  } catch (error: any) {
+    await sendEphemeralResponse(interaction, error.message);
+  }
 }
 
 async function handleDelete(interaction: CommandInteraction, userId: string) {
-  const code = interaction.options.get('code', true).value as string;
-  const deletedTodo = await todoService.deleteTodo(userId, code);
-  await sendEphemeralResponse(interaction, deletedTodo ? 'Tarefa deletada com sucesso!' : 'Tarefa não encontrada ou você não tem permissão para deletá-la.');
+  try {
+    const code = interaction.options.get('code', true).value as string;
+    const deletedTodo = await todoService.deleteTodo(userId, code);
+    await sendEphemeralResponse(
+      interaction,
+      deletedTodo
+        ? 'Tarefa deletada com sucesso!'
+        : 'Tarefa não encontrada ou você não tem permissão para deletá-la.',
+    );
+  } catch (error: any) {
+    await sendEphemeralResponse(interaction, error.message);
+  }
 }
 
 async function handleDeleteAll(interaction: CommandInteraction, userId: string) {
-  await todoService.deleteAllTodos(userId);
-  await sendEphemeralResponse(interaction, 'Todas as suas tarefas foram deletadas com sucesso.');
+  try {
+    await todoService.deleteAllTodos(userId);
+    await sendEphemeralResponse(
+      interaction,
+      'Todas as suas tarefas foram deletadas com sucesso.',
+    );
+  } catch (error: any) {
+    await sendEphemeralResponse(interaction, error.message);
+  }
 }
 
 async function handleStats(interaction: CommandInteraction, userId: string) {
-  let statistics;
-  if (hasPermission(interaction, ['staff'])) {
-    statistics = await todoService.getTaskStatistics();
-  } else if (hasPermission(interaction, ['oreia-seca', 'bug-catcher'])) {
-    statistics = await todoService.getTaskStatistics(userId);
-  } else {
-    return sendEphemeralResponse(interaction, randomMessage());
-  }
-
-  if (!statistics || statistics.length === 0) {
-    return sendEphemeralResponse(interaction, 'Não há tarefas registradas.');
-  }
-
-  let response = 'Estatísticas das tarefas:\n';
-  for (const stat of statistics) {
-    response += `Usuário: ${stat._id}\n`;
-    for (const status of stat.statusCounts) {
-      response += `  ${status.status}: ${status.count}\n`;
+  try {
+    let statistics;
+    if (hasPermission(interaction, ['staff'])) {
+      statistics = await todoService.getTaskStatistics();
+    } else if (hasPermission(interaction, ['oreia-seca', 'bug-catcher'])) {
+      statistics = await todoService.getTaskStatistics(userId);
+    } else {
+      return sendEphemeralResponse(interaction, randomMessage());
     }
+
+    if (!statistics || statistics.length === 0) {
+      return sendEphemeralResponse(interaction, 'Não há tarefas registradas.');
+    }
+
+    let response = 'Estatísticas das tarefas:\n';
+    for (const stat of statistics) {
+      response += `Usuário: ${stat._id}\n`;
+      for (const status of stat.statusCounts) {
+        response += `  ${status.status}: ${status.count}\n`;
+      }
+    }
+    await sendEphemeralResponse(interaction, response);
+  } catch (error: any) {
+    await sendEphemeralResponse(interaction, error.message);
   }
-  await sendEphemeralResponse(interaction, response);
 }
 
-async function handleStatusUpdate(interaction: CommandInteraction, userId: string) {
-  const code = interaction.options.get('code', true).value as string;
-  const newStatus = interaction.options.get('status', true).value as ETodoStatus;
-  const statusTargetUserId = interaction.options.get('user', false)?.value as string;
+async function handleStatusUpdate(
+  interaction: CommandInteraction,
+  userId: string,
+) {
+  try {
+    const code = interaction.options.get('code', true).value as string;
+    const newStatus = interaction.options.get('status', true).value as ETodoStatus;
+    const statusTargetUserId = interaction.options.get('user', false)?.value as string;
 
-  if (statusTargetUserId && !hasPermission(interaction, ['staff', 'bug-catcher'])) {
-    return sendEphemeralResponse(interaction, randomMessage());
+    if (
+      statusTargetUserId &&
+      !hasPermission(interaction, ['staff', 'bug-catcher'])
+    ) {
+      return sendEphemeralResponse(interaction, randomMessage());
+    }
+
+    const statusTargetUser = statusTargetUserId && hasPermission(interaction, ['staff', 'bug-catcher'])
+      ? statusTargetUserId
+      : userId;
+
+    if (!Object.values(ETodoStatus).includes(newStatus)) {
+      return sendEphemeralResponse(
+        interaction,
+        'Status inválido. Utilize `todo`, `doing` ou `done`.',
+      );
+    }
+
+    const updatedStatusTodo = await todoService.updateTodoStatus(
+      statusTargetUser,
+      code,
+      newStatus,
+    );
+    await sendEphemeralResponse(
+      interaction,
+      updatedStatusTodo
+        ? `Status da tarefa atualizado com sucesso para ${newStatus}!`
+        : 'Tarefa não encontrada ou você não tem permissão para atualizá-la.',
+    );
+  } catch (error: any) {
+    await sendEphemeralResponse(interaction, error.message);
   }
-
-  const statusTargetUser = statusTargetUserId && hasPermission(interaction, ['staff', 'bug-catcher']) ? statusTargetUserId : userId;
-
-  if (!Object.values(ETodoStatus).includes(newStatus)) {
-    return sendEphemeralResponse(interaction, 'Status inválido. Utilize `todo`, `doing` ou `done`.');
-  }
-
-  const updatedStatusTodo = await todoService.updateTodoStatus(statusTargetUser, code, newStatus);
-  await sendEphemeralResponse(interaction, updatedStatusTodo ? `Status da tarefa atualizado com sucesso para ${newStatus}!` : 'Tarefa não encontrada ou você não tem permissão para atualizá-la.');
 }
 
 async function handleList(interaction: CommandInteraction) {
-  const isStaffOrBugCatcher = hasPermission(interaction, ['staff', 'bug-catcher']);
-  const tasks = isStaffOrBugCatcher ? await todoService.getTodosGroupedByUser() : await todoService.getTodos(interaction.user.id);
+  try {
+    const isStaffOrBugCatcher = hasPermission(interaction, ['staff', 'bug-catcher']);
+    const tasks = isStaffOrBugCatcher
+      ? await todoService.getTodosGroupedByUser()
+      : await todoService.getTodos(interaction.user.id);
 
-  if (!tasks || tasks.length === 0) {
-    return sendEphemeralResponse(interaction, 'Não há tarefas para listar.');
-  }
+    if (!tasks || tasks.length === 0) {
+      return sendEphemeralResponse(interaction, 'Não há tarefas para listar.');
+    }
 
-  let response = 'Lista de Tarefas:\n';
-  if (isStaffOrBugCatcher) {
-    for (const user of tasks) {
-      response += `\n**Usuário**: ${user.username || user.userId}\n`;
-      for (const task of user.tasks) {
+    let response = 'Lista de Tarefas:\n';
+    if (isStaffOrBugCatcher) {
+      for (const user of tasks) {
+        response += `\n**Usuário**: ${user.username || user.userId}\n`;
+        for (const task of user.tasks) {
+          response += ` - **Código**: ${task.code} | **Status**: ${task.status} | **Descrição**: ${task.description}\n`;
+        }
+      }
+    } else {
+      for (const task of tasks) {
         response += ` - **Código**: ${task.code} | **Status**: ${task.status} | **Descrição**: ${task.description}\n`;
       }
     }
-  } else {
-    for (const task of tasks) {
-      response += ` - **Código**: ${task.code} | **Status**: ${task.status} | **Descrição**: ${task.description}\n`;
-    }
-  }
 
-  await sendEphemeralResponse(interaction, response);
+    await sendEphemeralResponse(interaction, response);
+  } catch (error: any) {
+    await sendEphemeralResponse(interaction, error.message);
+  }
 }
