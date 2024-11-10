@@ -1,7 +1,9 @@
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
+// ./src/index.ts
+import { Client, GatewayIntentBits, Collection, TextChannel } from 'discord.js';
 import dotenv from 'dotenv';
 import { loadCommands, loadSlashCommands } from './bot/loader';
 import mongoose from 'mongoose';
+import { scheduleTaskReminder } from './bot/scheduler';
 
 dotenv.config();
 
@@ -9,8 +11,13 @@ const mongoUri = process.env.MONGO_URI;
 const clientId = process.env.CLIENT_ID as string;
 const guildId = process.env.GUILD_ID as string;
 const token = process.env.DISCORD_TOKEN as string;
+const channelId = process.env.GENERAL_CHANNEL_ID as string;
+const cronTime = process.env.TASK_REMINDER_CRON as string;
+const taskOverdueDays = parseInt(process.env.TASK_OVERDUE_DAYS as string) || 3;
 
-if (!mongoUri || !clientId || !guildId || !token) {
+console.info({channelId, cronTime, taskOverdueDays });
+
+if (!mongoUri || !clientId || !guildId || !token || !channelId || !cronTime || !taskOverdueDays) {
   console.error(
     'Alguma variável de ambiente necessária não está definida no arquivo .env',
   );
@@ -49,11 +56,12 @@ client.once('ready', async () => {
 
   // Registrar Slash Commands
   await loadSlashCommands(client, clientId, guildId, token);
+
+  // Agendar a verificação de tarefas atrasadas
+  scheduleTaskReminder(client, guildId, channelId, taskOverdueDays, cronTime);
 });
 
 client.on('messageCreate', async message => {
-  // Verifica se a mensagem é uma DM e se não foi enviada pelo bot
-  console.info(message.content);
   if (message.channel.type === 1 && !message.author.bot) {
     await message.reply(
       'Ainda não processo DMs, por favor, utilize os comandos em um servidor.',

@@ -124,4 +124,14 @@ export class TodoService {
       },
     ]);
   }
+
+  async getOverdueTasks(days: number = 3): Promise<ITodo[]> {
+    const now = new Date();
+    const overdueDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+    return await TodoModel.find({
+      status: { $ne: 'done' },
+      createdAt: { $lte: overdueDate },
+    }).exec();
+  }
 }
