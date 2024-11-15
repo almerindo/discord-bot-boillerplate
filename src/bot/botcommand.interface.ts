@@ -1,3 +1,4 @@
+//./src/bot/botcommand.interface.ts
 import {
   CacheType,
   CommandInteraction,

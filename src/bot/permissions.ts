@@ -1,6 +1,5 @@
 //src/bot/permissions.ts
-import { CommandInteraction, Message } from 'discord.js';
-import { IBotCommand } from './botcommand.interface';
+import { CommandInteraction} from 'discord.js';
 
 export const hasPermission = (interaction: CommandInteraction, roles: string[]) => {
   const memberRoles = interaction.member?.roles;

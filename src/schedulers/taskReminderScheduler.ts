@@ -1,28 +1,29 @@
-// ./src/bot/taskScheduler.ts
-import cron from 'node-cron';
+// ./src/bot/schedulers/taskReminderScheduler.ts
+import { IScheduler } from '../bot/scheduler.interface';
 import { TextChannel, Client } from 'discord.js';
 import { TodoService } from '../services/todo/todo.service';
-import { getOnTimeMessage, getOverdueTaskMessage } from './messages';
+import { getOnTimeMessage, getOverdueTaskMessage } from '../bot/messages';
 
 const todoService = new TodoService();
 
-export const scheduleTaskReminder = (
-  client: Client,
-  guildId: string,
-  channelId: string,
-  limitInDays: number = 3,
-  cronTime: string = '0 9 * * *'
-) => {
-  cron.schedule(cronTime, async () => {
-    const guild = await client.guilds.fetch(guildId);
-    const channel = guild.channels.cache.get(channelId) as TextChannel;
+export const scheduler: IScheduler = {  // Alterado para 'scheduler'
+  name: 'TaskReminderScheduler',
+  cronTime: '0 9 * * *', // Executa diariamente às 9h
 
-    if (!channel) {
-      console.error('Canal #geral não encontrado');
-      return;
-    }
+  execute: async (client: Client) => {
+    const guildId = process.env.GUILD_ID as string;
+    const channelId = process.env.GENERAL_CHANNEL_ID as string;
+    const limitInDays = parseInt(process.env.TASK_OVERDUE_DAYS as string) || 3;
 
     try {
+      const guild = await client.guilds.fetch(guildId);
+      const channel = guild.channels.cache.get(channelId) as TextChannel;
+
+      if (!channel) {
+        console.error('Canal #geral não encontrado');
+        return;
+      }
+
       const pendingTasks = await todoService.getOverdueTasks(limitInDays);
 
       if (pendingTasks.length === 0) {
@@ -44,5 +45,5 @@ export const scheduleTaskReminder = (
     } catch (error) {
       console.error('Erro ao enviar o relatório de tarefas atrasadas:', error);
     }
-  });
+  },
 };
