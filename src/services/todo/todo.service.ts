@@ -113,6 +113,9 @@ export class TodoService {
   async getTodosGroupedByUser(): Promise<any> {
     return await TodoModel.aggregate([
       {
+        $match: { status: { $ne: 'done' } },
+      },
+      {
         $group: {
           _id: '$userId',
           username: { $first: '$username' },
